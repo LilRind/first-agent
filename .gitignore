@@ -1,0 +1,6 @@
+# 编译产物
+code/travel-agent/out/
+# 通用
+*.class
+.DS_Store
+Thumbs.db
