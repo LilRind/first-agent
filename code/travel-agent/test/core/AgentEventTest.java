@@ -32,12 +32,13 @@ public class AgentEventTest {
 
         AgentEvent.ToolStarted toolStart = AgentEvent.toolStarted("get_weather");
         Assert.equal("get_weather", toolStart.toolName());
-        AgentEvent.ToolEnded toolEnd = AgentEvent.toolEnded("get_weather");
+        AgentEvent.ToolEnded toolEnd = AgentEvent.toolEnded("get_weather", "北京晴，气温20℃");
         Assert.equal("get_weather", toolEnd.toolName());
+        Assert.equal("北京晴，气温20℃", toolEnd.resultText());
 
         // —— equals/hashCode:同构事件相等,异构不等 ——
         Assert.equalsContract(ts, AgentEvent.turnStarted(1), AgentEvent.turnStarted(2));
-        Assert.equalsContract(toolEnd, AgentEvent.toolEnded("get_weather"), AgentEvent.toolEnded("get_attraction"));
+        Assert.equalsContract(toolEnd, AgentEvent.toolEnded("get_weather", "北京晴，气温20℃"), AgentEvent.toolEnded("get_weather", "别的结果"));
         Assert.true_(!ms.equals(me), "message_started 与 message_ended 是不同类型事件,不该相等");
 
         // —— if-instanceof 穷尽匹配:遍历一个集合,每个都落到已知分支 ——
@@ -64,7 +65,7 @@ public class AgentEventTest {
         if (e instanceof AgentEvent.MessageUpdated) return "msg_update";
         if (e instanceof AgentEvent.MessageEnded me) return "msg_end:" + me.message().role();
         if (e instanceof AgentEvent.ToolStarted t) return "tool_start:" + t.toolName();
-        if (e instanceof AgentEvent.ToolEnded t) return "tool_end:" + t.toolName();
+        if (e instanceof AgentEvent.ToolEnded t) return "tool_end:" + t.toolName() + ":" + t.resultText();
         throw new IllegalStateException("未覆盖的事件类型: " + e);
     }
 }

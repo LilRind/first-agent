@@ -12,9 +12,9 @@ import tools.Tool;
 import tools.ToolRegistry;
 
 /**
- * RunLoop —— agent 循环引擎。对应 ReActAgent 的核心循环,但不打印、不持 UI 状态。
+ * RunLoop —— agent 循环引擎。纯循环,不打印、不持 UI 状态。
  *
- * 从 ReActAgent 拆分出来后,引擎只做一件事:驱动循环并通过 emit 回调派发 AgentEvent。
+ * 引擎只做一件事:驱动循环并通过 emit 回调派发 AgentEvent。
  * "谁在看""怎么显示"完全交给外壳(Agent)与订阅者,引擎保持纯净、可测试。
  * 这与 pi 的 runLoop、nanobot 的 AgentRunner 是同一层抽象:引擎只发事件。
  */
@@ -77,7 +77,7 @@ public class RunLoop {
                 String observation = tool.execute(call.args());
                 ToolResult result = observation == null ? ToolResult.error("工具无返回")
                         : new ToolResult(observation, false);
-                emit.accept(AgentEvent.toolEnded(call.name()));
+                emit.accept(AgentEvent.toolEnded(call.name(), result.text()));
                 // 观测结果回喂给 LLM,作为下一轮推理依据
                 messages.add(Message.user("工具返回: " + result.text() + "\n请继续你的 Thought 和 Action。"));
                 emit.accept(AgentEvent.turnEnded(round));

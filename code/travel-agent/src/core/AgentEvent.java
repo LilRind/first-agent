@@ -30,7 +30,7 @@ public sealed interface AgentEvent {
 
     // ---- 工具执行 ----
     record ToolStarted(String toolName) implements AgentEvent {}
-    record ToolEnded(String toolName) implements AgentEvent {}
+    record ToolEnded(String toolName, String resultText) implements AgentEvent {}
 
     // ---- 工厂 ----
     static AgentStarted agentStarted() { return new AgentStarted(); }
@@ -44,5 +44,5 @@ public sealed interface AgentEvent {
     static MessageEnded messageEnded(Message message) { return new MessageEnded(message); }
 
     static ToolStarted toolStarted(String toolName) { return new ToolStarted(toolName); }
-    static ToolEnded toolEnded(String toolName) { return new ToolEnded(toolName); }
+    static ToolEnded toolEnded(String toolName, String resultText) { return new ToolEnded(toolName, resultText); }
 }
