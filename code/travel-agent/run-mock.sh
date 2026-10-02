@@ -4,8 +4,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-JAVAC="${JAVA_HOME:-/c/Users/13374/.jdks/ms-17.0.16}/bin/javac"
-JAVA="${JAVA_HOME:-/c/Users/13374/.jdks/ms-17.0.16}/bin/java"
+# 钉死到 JDK17 —— 不信任 JAVA_HOME(本机被污染为 JDK8,编不了 switch 表达式)
+JAVAC="/c/Users/13374/.jdks/ms-17.0.16/bin/javac"
+JAVA="/c/Users/13374/.jdks/ms-17.0.16/bin/java"
 
 echo "[编译] 所有 src 下的 .java 到 out/ ..."
 find src -name '*.java' > /tmp/sources.txt

@@ -4,6 +4,8 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 
+import core.Message;
+
 /**
  * 离线 Mock LLM —— 不联网也能跑通整个 ReAct 循环。
  *

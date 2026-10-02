@@ -1,6 +1,7 @@
 package llm;
 
 import java.util.List;
+import core.Message;
 
 /**
  * 通向 LLM 的抽象 —— 主循环只关心"给它一段对话历史，它回一句文本"。
@@ -14,19 +15,4 @@ public interface ChatClient {
 
     /** 把一段对话历史发给 LLM，返回模型生成的纯文本回复。 */
     String chat(List<Message> messages);
-
-    /** 一条消息：谁说的、说了什么。role 复用 OpenAI 的 system/user/assistant。 */
-    record Message(String role, String content) {
-        public static Message system(String content) {
-            return new Message("system", content);
-        }
-
-        public static Message user(String content) {
-            return new Message("user", content);
-        }
-
-        public static Message assistant(String content) {
-            return new Message("assistant", content);
-        }
-    }
 }
