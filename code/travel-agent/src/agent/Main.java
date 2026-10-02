@@ -2,8 +2,8 @@ package agent;
 
 import core.AgentEvent;
 import llm.ChatClient;
+import llm.ChatClientFactory;
 import llm.MockChatClient;
-import llm.OpenAiCompatibleChatClient;
 import tools.AttractionTool;
 import tools.ToolRegistry;
 import tools.WeatherTool;
@@ -34,7 +34,7 @@ public class Main {
         boolean useMock = args.length > 0 && "mock".equalsIgnoreCase(args[0])
                 || System.getenv("LLM_API_KEY") == null;
         ChatClient llm = useMock ? MockChatClient.travelDemo()
-                : new OpenAiCompatibleChatClient();
+                : ChatClientFactory.create(System.getenv().getOrDefault("LLM_PROTOCOL", "openai"));
         if (useMock) {
             System.out.println("[模式] 使用 MockChatClient 离线演示（配了 LLM_API_KEY 可切真实模型）。\n");
         }

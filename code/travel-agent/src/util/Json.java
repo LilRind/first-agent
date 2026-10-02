@@ -67,6 +67,8 @@ public final class Json {
                 }
                 i = close + 1;
             } else {
+                // 段与段之间由 '.' 分隔;当 i 落在 '.' 上时先跨过(如 "[0].text" 的 ] 之后)
+                if (path.charAt(i) == '.') i++;
                 int dot = path.indexOf('.', i);
                 int bracket = path.indexOf('[', i);
                 int end;
@@ -78,11 +80,28 @@ public final class Json {
                 if (!(cur instanceof Map)) return null;
                 cur = ((Map<?, ?>) cur).get(key);
                 i = end;
-                // 跳过中间的 '.'，进入下一段
-                if (i < path.length() && path.charAt(i) == '.') i++;
             }
         }
         return cur;
+    }
+
+    /**
+     * 把字符串转成合法 JSON 字符串字面量（转义引号/反斜杠/换行等）。
+     * 供 OpenAI / Anthropic 两个 LLM 客户端拼请求体共享使用。
+     */
+    public static String quote(String s) {
+        StringBuilder sb = new StringBuilder("\"");
+        for (char c : s.toCharArray()) {
+            switch (c) {
+                case '"' -> sb.append("\\\"");
+                case '\\' -> sb.append("\\\\");
+                case '\n' -> sb.append("\\n");
+                case '\r' -> sb.append("\\r");
+                case '\t' -> sb.append("\\t");
+                default -> sb.append(c);
+            }
+        }
+        return sb.append('"').toString();
     }
 
     // ---- 内部递归下降解析器 ----

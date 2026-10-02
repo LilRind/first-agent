@@ -25,21 +25,28 @@ import util.Json;
  */
 public class OpenAiCompatibleChatClient implements ChatClient {
 
-    private static final String DEFAULT_BASE_URL = "https://api.openai.com/v1";
+    // 中性默认值(公开官方)。个人网关与模型经环境变量 LLM_BASE_URL / LLM_MODEL 覆盖,不写死进代码。
+    private static final String DEFAULT_BASE_URL = "https://api.openai.com/v1"; // 客户端会拼 /chat/completions,故含 /v1
     private static final String DEFAULT_MODEL = "gpt-3.5-turbo";
 
-    private final HttpClient http = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(10))
-            .build();
-
+    private final HttpClient http;
     private final String apiKey;
     private final String baseUrl;
     private final String model;
 
     public OpenAiCompatibleChatClient() {
-        this.apiKey = System.getenv("LLM_API_KEY");
-        this.baseUrl = System.getenv().getOrDefault("LLM_BASE_URL", DEFAULT_BASE_URL);
-        this.model = System.getenv().getOrDefault("LLM_MODEL", DEFAULT_MODEL);
+        this(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build(),
+                System.getenv("LLM_API_KEY"),
+                System.getenv().getOrDefault("LLM_BASE_URL", DEFAULT_BASE_URL),
+                System.getenv().getOrDefault("LLM_MODEL", DEFAULT_MODEL));
+    }
+
+    /** 可注入构造:http/baseUrl 可换成指向本地假网关的实现,便于测试。baseUrl/model 防御性 trim。 */
+    public OpenAiCompatibleChatClient(HttpClient http, String apiKey, String baseUrl, String model) {
+        this.http = http;
+        this.apiKey = apiKey;
+        this.baseUrl = baseUrl.trim();
+        this.model = model.trim();
     }
 
     @Override
@@ -54,7 +61,7 @@ public class OpenAiCompatibleChatClient implements ChatClient {
                 Message m = messages.get(i);
                 if (i > 0) msgs.append(",");
                 msgs.append("{\"role\":\"").append(m.role())
-                        .append("\",\"content\":").append(jsonQuote(m.content())).append("}");
+                        .append("\",\"content\":").append(Json.quote(m.content())).append("}");
             }
             msgs.append("]");
             String requestBody = "{\"model\":\"" + model + "\",\"messages\":" + msgs + "}";
@@ -70,7 +77,15 @@ public class OpenAiCompatibleChatClient implements ChatClient {
             if (resp.statusCode() != 200) {
                 throw new IllegalStateException("LLM 接口返回 " + resp.statusCode() + ": " + resp.body());
             }
-            var root = Json.parseObject(resp.body());
+            String raw = resp.body();
+            Map<String, Object> root;
+            try {
+                root = Json.parseObject(raw);
+            } catch (RuntimeException e) {
+                // 诊断:解析失败说明网关没返回 {…} 开头的 JSON,把原始响应带出来便于定位
+                String snippet = raw.length() > 800 ? raw.substring(0, 800) + "…[已截断]" : raw;
+                throw new IllegalStateException("LLM 返回无法解析为 JSON,开头为: <" + snippet + ">", e);
+            }
             String content = Json.getString(root, "choices[0].message.content");
             if (content == null) {
                 throw new IllegalStateException("LLM 返回里没有 choices[0].message.content");
@@ -82,21 +97,5 @@ public class OpenAiCompatibleChatClient implements ChatClient {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("调用 LLM 被中断", e);
         }
-    }
-
-    /** 把字符串转成合法 JSON 字符串字面量（转义引号/反斜杠/换行等）。 */
-    private static String jsonQuote(String s) {
-        StringBuilder sb = new StringBuilder("\"");
-        for (char c : s.toCharArray()) {
-            switch (c) {
-                case '"' -> sb.append("\\\"");
-                case '\\' -> sb.append("\\\\");
-                case '\n' -> sb.append("\\n");
-                case '\r' -> sb.append("\\r");
-                case '\t' -> sb.append("\\t");
-                default -> sb.append(c);
-            }
-        }
-        return sb.append('"').toString();
     }
 }
