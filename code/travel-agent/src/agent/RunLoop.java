@@ -61,7 +61,6 @@ public class RunLoop {
 
             if (parsed instanceof ActionParser.Finish fin) {
                 emit.accept(AgentEvent.turnEnded(round));
-                emit.accept(AgentEvent.agentEnded(fin.answer()));
                 return fin.answer();
             }
 
@@ -86,9 +85,7 @@ public class RunLoop {
         }
 
         // 轮数用尽还没收尾,兜底返回
-        String fallback = "抱歉,尝试了 " + maxRounds + " 轮仍未得到最终答案,请换个问法再试。";
-        emit.accept(AgentEvent.agentEnded(fallback));
-        return fallback;
+        return "抱歉,尝试了 " + maxRounds + " 轮仍未得到最终答案,请换个问法再试。";
     }
 
     /** 组装系统提示词:固定说明书 + 当前注册的工具描述。 */

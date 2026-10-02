@@ -28,6 +28,12 @@ public final class Assert {
         }
     }
 
+    public static void equal(int expected, int actual, String message) {
+        if (expected != actual) {
+            throw new AssertionError(message + " (expected=" + expected + " actual=" + actual + ")");
+        }
+    }
+
     public static void true_(boolean condition, String message) {
         if (!condition) {
             throw new AssertionError(message);
