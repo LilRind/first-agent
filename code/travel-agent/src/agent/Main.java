@@ -45,7 +45,8 @@ public class Main {
 
         String question = args.length > 1 && !"mock".equalsIgnoreCase(args[0])
                 ? args[1]
-                : "我想去北京玩，帮我推荐一下？";
+                : "我想杭州玩，帮我推荐一下？";
+                // : "我想去北京玩，帮我推荐一下？";
         System.out.println("[用户] " + question);
 
         String answer = agent.run(question);
