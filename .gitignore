@@ -4,3 +4,8 @@ code/travel-agent/out/
 *.class
 .DS_Store
 Thumbs.db
+# 本地环境 / IDE
+.idea/
+# 运行日志(可能含真实网关对话,不进仓库)
+每日-运行结果记录/
+code/travel-agent/每日-运行结果记录/
