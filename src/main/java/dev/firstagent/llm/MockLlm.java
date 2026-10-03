@@ -23,7 +23,7 @@ public class MockLlm implements LlmProvider {
     @Override
     public AssistantReply chat(List<Message> history) {
         calls++;
-        lastHistory = history;                       // 记录这次看到的历史，供 AC-7 断言"请求由历史派生"
+        lastHistory = List.copyOf(history);          // 快照"调用时刻"的派生请求（非活引用），供 AC-7 断言
         AssistantReply r = script.pollFirst();
         if (r == null) throw new IllegalStateException("MockLlm 脚本已耗尽：第 " + calls + " 次调用无预设回复");
         return r;
