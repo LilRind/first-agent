@@ -30,6 +30,10 @@ class AgentLoopTest {
 
         assertEquals("重试成功", loop.execute("调一个不存在的工具"));
         assertEquals(2, llm.calls());
+
+        Message last = llm.lastHistory().get(llm.lastHistory().size() - 1);  // 喂给模型的重试前历史，末条=tool_result
+        assertTrue(last.isError());
+        assertTrue(last.text().contains("unknown tool: ghost"));          // 回填了缺工具错误（AC-4）
     }
 
     // AC-4 工具 execute 抛异常 ⇒ 回填 error；模型重试成功后返回正确文本
@@ -52,6 +56,10 @@ class AgentLoopTest {
 
         assertEquals("纠正后成功", loop.execute("给坏参数"));
         assertEquals(2, llm.calls());
+
+        Message last = llm.lastHistory().get(llm.lastHistory().size() - 1);
+        assertTrue(last.isError());
+        assertTrue(last.text().contains("参数不完整"));                    // 回填了 salvage 提示文案（AC-5）
     }
 
     // AC-6 连续只发工具不收敛 ⇒ 抛 MaxTurnsReached 不死循环（cap 用 3，机制等同默认 10）

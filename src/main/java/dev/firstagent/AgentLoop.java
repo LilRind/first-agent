@@ -68,7 +68,8 @@ public class AgentLoop {
         } catch (ToolExecutionException e) {
             return Message.toolResult(call.id(), "tool_use_error: " + e.getMessage(), true);
         } catch (Exception e) {                                           // 工具自身任意异常
-            return Message.toolResult(call.id(), "tool_use_error: " + e.getMessage(), true);
+            String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+            return Message.toolResult(call.id(), "tool_use_error: " + reason, true);
         }
     }
 }

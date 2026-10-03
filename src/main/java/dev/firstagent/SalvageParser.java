@@ -3,7 +3,10 @@ package dev.firstagent;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/** D2 简化：校验 LLM 返回的参数是合法 JSON。非法/截断 → 抛 ToolExecutionException（回填 tool_use_error）。 */
+/**
+ * D2 简化：校验 LLM 返回的参数是合法 JSON。非法/截断 → 抛 ToolExecutionException（回填 tool_use_error）。
+ * 仅做语法层校验（是合法 JSON）；形状（是否对象/含哪些字段）交由各工具自行处理（Minor-5，无 input_schema）。
+ */
 public final class SalvageParser {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 

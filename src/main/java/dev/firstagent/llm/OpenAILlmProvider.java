@@ -13,6 +13,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +22,9 @@ public class OpenAILlmProvider implements LlmProvider {
     private static final ObjectMapper M = new ObjectMapper();
     private static final String DEFAULT_ENDPOINT = "https://api.openai.com/v1/chat/completions";
 
-    private final HttpClient http = HttpClient.newHttpClient();
+    private final HttpClient http = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))          // 防网络挂起永久阻塞（Important-2）
+            .build();
     private final String apiKey;
     private final String endpoint;
     private final String model;
@@ -54,7 +57,15 @@ public class OpenAILlmProvider implements LlmProvider {
                     .build();
 
             HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
-            JsonNode msg = M.readTree(resp.body()).path("choices").get(0).path("message");
+            if (resp.statusCode() < 200 || resp.statusCode() >= 300) {    // Important-1：报错不静默
+                String detail = M.readTree(resp.body()).path("error").path("message").asText(resp.body());
+                throw new IllegalStateException("OpenAI HTTP " + resp.statusCode() + ": " + detail);
+            }
+            JsonNode choice = M.readTree(resp.body()).path("choices").get(0);
+            JsonNode msg = choice != null ? choice.path("message") : M.nullNode();
+            if (msg.isMissingNode() || msg.isNull()) {
+                throw new IllegalStateException("OpenAI 响应无 choices/message: " + resp.body());
+            }
 
             String text = msg.path("content").isValueNode() ? msg.path("content").asText() : null;
             List<ToolCall> calls = new ArrayList<>();
@@ -67,7 +78,8 @@ public class OpenAILlmProvider implements LlmProvider {
                             tc.path("function").path("arguments").asText()));
                 }
             }
-            return new AssistantReply(text, calls, msg.path("stop_reason").asText(null));
+            String stopReason = choice != null ? choice.path("finish_reason").asText(null) : null; // Minor-4
+            return new AssistantReply(text, calls, stopReason);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("OpenAI 调用被中断", e);

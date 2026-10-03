@@ -10,6 +10,9 @@
 骨架 = hermes 主判（发不发工具）+ pi `FinishTurn` 可编程退出钩子 + dsh 派生历史。
 只引 LLM provider SDK，不引 agent 框架。
 
+> **v0 边界声明**：真实 `OpenAILlmProvider` 已接通**聊天**闭环（读 `OPENAI_API_KEY`），但**工具定义未注入请求**（`tools` 字段），
+> 故真实 provider 目前只做纯聊天，工具调用闭环仅在 `MockLlm` 驱动下被测试覆盖（见 `AgentLoopTest`）。工具注入 schema 留二期。
+
 ## 运行
 ```bash
 export JAVA_HOME="$(cygpath -w /c/Users/13374/.jdks/ms-17.0.16)"
