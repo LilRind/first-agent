@@ -1,9 +1,11 @@
 # 编译产物
 code/travel-agent/out/
+target/
 # 通用
 *.class
 .DS_Store
 Thumbs.db
+*.iml
 # 本地环境 / IDE
 .idea/
 # 运行日志(可能含真实网关对话,不进仓库)
