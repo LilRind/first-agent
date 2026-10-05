@@ -37,7 +37,7 @@ public class GrepTool implements SchematizedTool {
             "properties", Map.of(
                 "pattern", Map.of("type", "string", "description", "正则模式"),
                 "path", Map.of("type", "string", "description", "搜索的目录或文件(默认当前目录)"),
-                "glob", Map.of("type", "string", "description", "按 glob 过滤文件，如 '*.java'"),
+                "glob", Map.of("type", "string", "description", "按 glob 过滤文件，递归匹配，如 '*.java' 匹配任意层级"),
                 "ignoreCase", Map.of("type", "boolean", "description", "忽略大小写"),
                 "context", Map.of("type", "number", "description", "匹配行前后各显示几行"),
                 "limit", Map.of("type", "number", "description", "最大返回匹配数(默认 " + DEFAULT_LIMIT + ")")),
@@ -78,6 +78,7 @@ public class GrepTool implements SchematizedTool {
                     if (!pattern.matcher(lines.get(i)).find()) continue;
                     if (count >= limit) { limitReached = true; break; }
                     String rel = root.relativize(file).toString().replace('\\', '/');
+                    if (rel.isEmpty()) rel = file.getFileName().toString();
                     if (context <= 0) {
                         out.append(rel).append(':').append(i + 1).append(": ").append(lines.get(i).strip()).append('\n');
                     } else {
@@ -100,8 +101,14 @@ public class GrepTool implements SchematizedTool {
     }
 
     private static boolean matchesGlob(Path file, Path root, String glob) {
-        PathMatcher m = file.getFileSystem().getPathMatcher("glob:" + glob);
-        return m.matches(root.relativize(file));
+        Path rel = root.relativize(file);
+        // 无路径分隔符的 glob 应递归匹配任意层级（如 *.java 匹配子目录）。
+        // Java 的 glob "**/glob" 不匹配根级文件，故根级用原 glob 匹配，嵌套用 "**/" 前缀匹配，二者取或。
+        if (glob.contains("/")) {
+            return file.getFileSystem().getPathMatcher("glob:" + glob).matches(rel);
+        }
+        return file.getFileSystem().getPathMatcher("glob:" + glob).matches(rel)
+            || file.getFileSystem().getPathMatcher("glob:**/" + glob).matches(rel);
     }
 
     private static JsonNode parse(String json) {
