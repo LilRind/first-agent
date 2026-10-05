@@ -22,9 +22,10 @@ public interface LoopStrategy {
     default void prepareNextTurn(AssistantReply lastReply) {}
 
     /**
-     * 对齐 pi prepareRequest：发请求前投影/路由。MVP no-op。
+     * 对齐 pi prepareRequest：发请求前投影/路由。MVP 默认恒等（返回原历史）。
+     * 改为返回「实际发给模型的消息」——压缩(折叠)/记忆(注入)在准备时真正生效。
      */
-    default void prepareRequest(List<Message> history) {}
+    default List<Message> prepareRequest(List<Message> history) { return history; }
 
     /**
      * 对齐 pi finishTurn：一轮(内层)结束时裁决 end / continue。

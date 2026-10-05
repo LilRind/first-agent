@@ -71,9 +71,9 @@ public class AgentLoop {
                 }
                 pending = strategy.getSteeringMessages();   // 排空后再轮询（对齐 Pi 单条语义）
 
-                strategy.prepareRequest(history);      // pi prepareRequest：投影/路由（MVP no-op）
+                List<Message> requestMessages = strategy.prepareRequest(history);  // 压缩/记忆在此生效
 
-                AssistantReply reply = llm.chat(history);      // 请求由派生历史
+                AssistantReply reply = llm.chat(requestMessages);      // 请求 = prepareRequest 的返回值
                 lastReply = reply;
                 Message assistant = Message.assistant(reply.text(), reply.toolCalls());
                 history.add(assistant);
