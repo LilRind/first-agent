@@ -29,4 +29,16 @@ class WriteToolTest {
         assertThrows(dev.firstagent.ToolExecutionException.class,
             () -> tool.execute("{\"path\":\"a.txt\"}"));
     }
+
+    @Test void missingPathThrows() {
+        WriteTool tool = new WriteTool(tmp.toString());
+        assertThrows(dev.firstagent.ToolExecutionException.class,
+            () -> tool.execute("{\"content\":\"x\"}"));
+    }
+
+    @Test void blankPathThrows() {
+        WriteTool tool = new WriteTool(tmp.toString());
+        assertThrows(dev.firstagent.ToolExecutionException.class,
+            () -> tool.execute("{\"path\":\"   \",\"content\":\"x\"}"));
+    }
 }
