@@ -21,15 +21,43 @@ class ReadToolTest {
         writeFile("line1\nline2\nline3\n");
         ReadTool tool = new ReadTool(tmp.toString());
         String out = tool.execute("{\"path\":\"sample.txt\"}");
-        assertTrue(out.contains("line1") && out.contains("line3"), out);
+        assertEquals("line1\nline2\nline3", out);
     }
 
     @Test void respectsLimit() throws Exception {
         writeFile(String.join("\n", List.of("a", "b", "c", "d", "e")));
         ReadTool tool = new ReadTool(tmp.toString());
         String out = tool.execute("{\"path\":\"sample.txt\",\"limit\":2}");
-        assertTrue(out.contains("a") && out.contains("b"), out);
+        assertEquals("a\nb", out);
         assertFalse(out.contains("c"), out);
+    }
+
+    @Test void offsetStartsMidFile() throws Exception {
+        writeFile(String.join("\n", List.of("a", "b", "c", "d", "e")));
+        ReadTool tool = new ReadTool(tmp.toString());
+        String out = tool.execute("{\"path\":\"sample.txt\",\"offset\":3}");
+        assertEquals("c\nd\ne", out);
+    }
+
+    @Test void offsetAtEndReadsLastLine() throws Exception {
+        writeFile(String.join("\n", List.of("a", "b", "c", "d", "e")));
+        ReadTool tool = new ReadTool(tmp.toString());
+        String out = tool.execute("{\"path\":\"sample.txt\",\"offset\":5}");
+        assertEquals("e", out);
+    }
+
+    @Test void offsetBeyondEndThrows() throws Exception {
+        writeFile(String.join("\n", List.of("a", "b", "c", "d", "e")));
+        ReadTool tool = new ReadTool(tmp.toString());
+        assertThrows(dev.firstagent.ToolExecutionException.class,
+            () -> tool.execute("{\"path\":\"sample.txt\",\"offset\":6}"));
+    }
+
+    @Test void negativeLimitReadsAll() throws Exception {
+        writeFile(String.join("\n", List.of("a", "b", "c", "d", "e")));
+        ReadTool tool = new ReadTool(tmp.toString());
+        String out = tool.execute("{\"path\":\"sample.txt\",\"limit\":-1}");
+        assertEquals("a\nb\nc\nd\ne", out);
     }
 
     @Test void missingPathThrows() {
