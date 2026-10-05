@@ -21,6 +21,12 @@ class BashToolTest {
         assertTrue(out.contains("exit=3"), out);
     }
 
+    @Test void capturesStderrThroughMergedStream() {
+        BashTool tool = new BashTool(tmp.toString());
+        String out = tool.execute("{\"command\":\"echo err 1>&2\"}");
+        assertTrue(out.contains("err"), out);
+    }
+
     @Test void missingCommandThrows() {
         BashTool tool = new BashTool(tmp.toString());
         assertThrows(dev.firstagent.ToolExecutionException.class, () -> tool.execute("{}"));

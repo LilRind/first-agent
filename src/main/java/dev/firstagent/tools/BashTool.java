@@ -49,15 +49,18 @@ public class BashTool implements SchematizedTool {
             : List.of("/bin/sh", "-c", command);
 
         try {
-            Process p = new ProcessBuilder(cmdline).directory(Path.of(cwd).toFile()).start();
+            // 合并 stderr 到 stdout 单一管道，规避双管道(~64KB buffer)阻塞导致的假超时。
+            // 超大单管道输出仍可能阻塞 waitFor 而触发超时 —— 以 destroyForcibly + 超时兜底，接受为 MVP 权衡。
+            ProcessBuilder pb = new ProcessBuilder(cmdline).redirectErrorStream(true);
+            pb.directory(Path.of(cwd).toFile());
+            Process p = pb.start();
             if (!p.waitFor(timeout, TimeUnit.MILLISECONDS)) {
                 p.destroyForcibly();
                 throw new ToolExecutionException("命令超时(" + timeout + "ms): " + command);
             }
+            // stderr 已并入 stdout，两者时序交错，无法再单独标注 [stderr]。
             String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            String err = new String(p.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
-            String merged = out.strip() + (err.isBlank() ? "" : "\n[stderr]\n" + err.strip());
-            String result = "exit=" + p.exitValue() + "\n" + merged;
+            String result = "exit=" + p.exitValue() + "\n" + out.strip();
             return Truncate.truncate(result, Truncate.DEFAULT_MAX_LINES, Truncate.DEFAULT_MAX_BYTES);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
