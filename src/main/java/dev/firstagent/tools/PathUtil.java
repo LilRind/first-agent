@@ -8,7 +8,7 @@ public final class PathUtil {
 
     public static Path resolveToCwd(String path, String cwd) {
         String p = path == null ? "" : path.strip();
-        if (p.startsWith("~")) {
+        if (p.equals("~") || p.startsWith("~/")) {
             p = System.getProperty("user.home") + p.substring(1);
         }
         Path base = Path.of(p);

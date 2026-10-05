@@ -20,4 +20,10 @@ class TruncateTest {
         String out = Truncate.truncate("abc", 2000, 2);
         assertTrue(out.contains("bytes"), out);
     }
+
+    @Test void cjkCuttingDoesNotEmitReplacementChar() {
+        String out = Truncate.truncate("你", 2000, 2); // "你" 是 3 字节，2 字节处切断
+        assertFalse(out.contains("�"), out);
+        assertTrue(out.contains("bytes"), out);
+    }
 }

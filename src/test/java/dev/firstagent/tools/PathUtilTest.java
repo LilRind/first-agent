@@ -15,4 +15,9 @@ class PathUtilTest {
         Path p = PathUtil.resolveToCwd("x/y.txt", "C:/base");
         assertEquals(Path.of("C:/base/x/y.txt").normalize(), p);
     }
+
+    @Test void tildeExpandsToUserHome() {
+        Path p = PathUtil.resolveToCwd("~/x.txt", "C:/base");
+        assertEquals(Path.of(System.getProperty("user.home"), "x.txt"), p);
+    }
 }
