@@ -15,8 +15,8 @@
 
 ## 运行
 ```bash
-export JAVA_HOME="$(cygpath -w /c/Users/13374/.jdks/ms-17.0.16)"
-export PATH="/c/Users/13374/.maven/expanded/apache-maven-3.9.16/bin:$PATH"
+export JAVA_HOME="$(cygpath -w /xxx/.jdks/ms-17.0.16)"
+export PATH="/xxx/.maven/expanded/apache-maven-3.9.16/bin:$PATH"
 mvn test
 ```
 集成测试需 `OPENAI_API_KEY`；无 key 自动跳过。
