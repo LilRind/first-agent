@@ -70,6 +70,21 @@ class MemoryRecallIntegrationTest {
         // 事件桥 span 之前先有 memory span
         assertTrue(names.indexOf("memory.recall") < names.indexOf("agent.end"),
                 "memory.recall 应先于 agent.end");
+
+        // —— 可见输出：跑测试时控制台直接展示验证结果 ——
+        System.out.println("\n===== MemoryRecallIntegrationTest 验证结果 =====");
+        System.out.println("最终答案: " + answer);
+        System.out.println("\n(a) 跨会话记忆召回 -> 注入历史的前缀:");
+        history.stream().filter(m -> m.text().contains("长期记忆"))
+                .forEach(m -> System.out.println("    " + m.text().replace("\n", " ⏎ ")));
+        System.out.println("    (含旧会话关键词 北京天气: "
+                + history.stream().anyMatch(m -> m.text().contains("北京天气")) + ")");
+        System.out.println("\n(c) 压缩折叠 -> 历史里出现 [压缩摘要]: "
+                + history.stream().anyMatch(m -> m.text().startsWith("[压缩摘要]")));
+        System.out.println("\n(b) telemetry span 顺序:");
+        names.forEach(n -> System.out.println("    " + n));
+        System.out.println("    compaction span 存在: " + names.contains("compaction"));
+        System.out.println("============================================");
     }
 
     @Test void appendsMessagesToSessionStore() {
