@@ -5,8 +5,8 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 # 钉死链路到 JDK 17 —— 不信任 JAVA_HOME(本机被污染为 JDK8,编不了 switch 表达式)
-JAVAC="/c/Users/13374/.jdks/ms-17.0.16/bin/javac"
-JAVA="/c/Users/13374/.jdks/ms-17.0.16/bin/java"
+JAVAC="/xxx/.jdks/ms-17.0.16/bin/javac"
+JAVA="/xxx/.jdks/ms-17.0.16/bin/java"
 
 rm -rf out
 mkdir -p out
