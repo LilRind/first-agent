@@ -16,8 +16,8 @@ A simplified Coding Agent inspired by the implementation of Pi
 
 运行 demo：
 ```bash
-export JAVA_HOME="$(cygpath -w /c/Users/13374/.jdks/ms-17.0.16)"
-export PATH="/c/Users/13374/.maven/expanded/apache-maven-3.9.16/bin:$PATH"
+export JAVA_HOME="$(cygpath -w /xxx/.jdks/ms-17.0.16)"
+export PATH="/xxx/.maven/expanded/apache-maven-3.9.16/bin:$PATH"
 mvn -q compile dependency:build-classpath -Dmdep.outputFile=target/cp.txt
 "$JAVA_HOME/bin/java" -cp "target/classes;$(cat target/cp.txt)" dev.firstagent.tools.ToolsDemo
 ```
