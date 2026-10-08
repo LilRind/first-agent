@@ -1,6 +1,7 @@
 # 编译产物
 code/travel-agent/out/
 target/
+cp.txt
 # 通用
 *.class
 .DS_Store
