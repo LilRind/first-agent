@@ -23,6 +23,10 @@ public class OpenAILlmProvider implements LlmProvider {
     private static final ObjectMapper M = new ObjectMapper();
     private static final String DEFAULT_ENDPOINT = "https://api.openai.com/v1/chat/completions";
     private static final String DEFAULT_MODEL = "gpt-4o-mini";
+    /** 宽松工具参数 schema：仅声明 object 类型，字段由 description 引导（完整 input_schema 为改善项）。 */
+    private static final ObjectNode LOOSE_PARAMS = M.createObjectNode()
+            .put("type", "object")
+            .set("properties", M.createObjectNode());
 
     private final HttpClient http = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))          // 防网络挂起永久阻塞（Important-2）
@@ -30,23 +34,34 @@ public class OpenAILlmProvider implements LlmProvider {
     private final String apiKey;
     private final String endpoint;
     private final String model;
+    private final List<ToolSpec> tools;                     // 工具声明；空 = 原行为（不发 tools）
 
-    /** 无参构造：从 AppConfig 读三个字段（.env 文件 > 环境变量 > 默认值）。 */
+    /** 无参构造：从 AppConfig 读三个字段（.env 文件 > 环境变量 > 默认值）。无工具声明。 */
     public OpenAILlmProvider() {
-        this(new AppConfig());
+        this(new AppConfig(), List.of());
     }
 
-    /** 显式注入 config（测试可用 mock/temp .env）。 */
+    /** 显式注入 config（测试可用 mock/temp .env）。无工具声明。 */
     public OpenAILlmProvider(AppConfig cfg) {
-        this(cfg.get("OPENAI_API_KEY", null),
-             cfg.get("OPENAI_BASE_URL", DEFAULT_ENDPOINT),
-             cfg.get("OPENAI_MODEL", DEFAULT_MODEL));
+        this(cfg, List.of());
     }
 
     public OpenAILlmProvider(String apiKey, String endpoint, String model) {
+        this(apiKey, endpoint, model, List.of());
+    }
+
+    /** 带工具声明：真实模型可发起工具调用（ReAct 完整闭环的硬前提）。 */
+    public OpenAILlmProvider(AppConfig cfg, List<ToolSpec> tools) {
+        this(cfg.get("OPENAI_API_KEY", null),
+             cfg.get("OPENAI_BASE_URL", DEFAULT_ENDPOINT),
+             cfg.get("OPENAI_MODEL", DEFAULT_MODEL), tools);
+    }
+
+    public OpenAILlmProvider(String apiKey, String endpoint, String model, List<ToolSpec> tools) {
         this.apiKey = apiKey;
         this.endpoint = endpoint;
         this.model = model;
+        this.tools = tools == null ? List.of() : tools;
     }
 
     @Override
@@ -58,6 +73,16 @@ public class OpenAILlmProvider implements LlmProvider {
             ObjectNode body = M.createObjectNode();
             body.put("model", model);
             body.set("messages", toOpenAIMessages(history));
+            if (!tools.isEmpty()) {                              // 真实闭环：声明工具让模型可发起调用
+                ArrayNode arr = M.createArrayNode();
+                for (ToolSpec t : tools) {
+                    ObjectNode fn = arr.addObject().putObject("function");
+                    fn.put("name", t.name());
+                    fn.put("description", t.description());
+                    fn.set("parameters", LOOSE_PARAMS.deepCopy());   // 宽松 object 参数 schema
+                }
+                body.set("tools", arr);
+            }
 
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create(endpoint))
