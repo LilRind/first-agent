@@ -2,6 +2,7 @@ package dev.firstagent.app;
 
 import dev.firstagent.*;
 import dev.firstagent.llm.MockLlm;
+import dev.firstagent.llm.OpenAILlmProvider;
 import dev.firstagent.memory.MemoryRecallStrategy;
 import dev.firstagent.session.SessionStore;
 import dev.firstagent.session.SummarizingCompactor;
@@ -15,8 +16,8 @@ import java.util.List;
 
 /**
  * 最小 Agent CLI —— 先跑起来看到结果。
- * 复用 MockLlm 离线跑通「工具调用 → 收尾」闭环，打 telemetry span + 最终答案；会话落盘 sessions/。
- * 换真模型：把 MockLlm 换成 OpenAILlmProvider() 并配 OPENAI_API_KEY 即可（可选）。
+ * 真实模型：.env 或环境变量配 OPENAI_API_KEY → OpenAILlmProvider，读 .env 的 BASE_URL/MODEL。
+ * 离线兜底：没配 key 时退回 MockLlm，跑通「工具调用 → 收尾」闭环，打 telemetry span + 最终答案；会话落盘 sessions/。
  */
 public final class MinimalAgent {
 
@@ -32,9 +33,15 @@ public final class MinimalAgent {
         MemoryRecallStrategy strategy = new MemoryRecallStrategy(store, compactor, cwd, telemetry);
 
         ToolRegistry tools = new ToolRegistry().register(new EchoTool()).register(new FailTool());
-        LlmProvider llm = MockLlm.scripted(
-                new AssistantReply("", List.of(new ToolCall("call_1", "echo", "{\"msg\":\"你好\"}")), "tool_use"),
-                new AssistantReply("已用 echo 工具完成回显，工具结果见调用记录。", List.of(), "end_turn"));
+
+        // .env 或环境变量配了 key → 真实模型（读 OPENAI_BASE_URL/OPENAI_MODEL，兼容任意网关/本地 ollama）；
+        // 没配 → 退回 MockLlm 离线演示，无需任何 key 也能看到运行结果。
+        AppConfig cfg = new AppConfig();
+        LlmProvider llm = cfg.has("OPENAI_API_KEY")
+                ? new OpenAILlmProvider(cfg)
+                : MockLlm.scripted(
+                        new AssistantReply("", List.of(new ToolCall("call_1", "echo", "{\"msg\":\"你好\"}")), "tool_use"),
+                        new AssistantReply("已用 echo 工具完成回显，工具结果见调用记录。", List.of(), "end_turn"));
 
         AgentLoop loop = new AgentLoop(SYSTEM, llm, tools, 10, strategy);
         AgentEventTelemetryBridge bridge = new AgentEventTelemetryBridge(telemetry);

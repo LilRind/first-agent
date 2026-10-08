@@ -12,3 +12,6 @@ Thumbs.db
 每日-运行结果记录/
 code/travel-agent/每日-运行结果记录/
 sessions/
+# 本地配置(含 API key,绝不入库/推送)
+.env
+*.env

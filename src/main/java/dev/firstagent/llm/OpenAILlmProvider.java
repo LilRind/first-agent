@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import dev.firstagent.AppConfig;
 import dev.firstagent.AssistantReply;
 import dev.firstagent.LlmProvider;
 import dev.firstagent.Message;
@@ -21,6 +22,7 @@ import java.util.List;
 public class OpenAILlmProvider implements LlmProvider {
     private static final ObjectMapper M = new ObjectMapper();
     private static final String DEFAULT_ENDPOINT = "https://api.openai.com/v1/chat/completions";
+    private static final String DEFAULT_MODEL = "gpt-4o-mini";
 
     private final HttpClient http = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))          // 防网络挂起永久阻塞（Important-2）
@@ -29,8 +31,16 @@ public class OpenAILlmProvider implements LlmProvider {
     private final String endpoint;
     private final String model;
 
+    /** 无参构造：从 AppConfig 读三个字段（.env 文件 > 环境变量 > 默认值）。 */
     public OpenAILlmProvider() {
-        this(System.getenv("OPENAI_API_KEY"), DEFAULT_ENDPOINT, "gpt-4o-mini");
+        this(new AppConfig());
+    }
+
+    /** 显式注入 config（测试可用 mock/temp .env）。 */
+    public OpenAILlmProvider(AppConfig cfg) {
+        this(cfg.get("OPENAI_API_KEY", null),
+             cfg.get("OPENAI_BASE_URL", DEFAULT_ENDPOINT),
+             cfg.get("OPENAI_MODEL", DEFAULT_MODEL));
     }
 
     public OpenAILlmProvider(String apiKey, String endpoint, String model) {
