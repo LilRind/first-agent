@@ -26,5 +26,9 @@ public final class AgentEventTelemetryBridge implements Consumer<AgentEvent> {
             rec.record("tool.end", Map.of("tool", t.call().name()));
         else if (e instanceof AgentEvent.TurnEnded) rec.record("turn.end", Map.of());
         else if (e instanceof AgentEvent.AgentEnded) rec.record("agent.end", Map.of());
+        else if (e instanceof AgentEvent.PlanStarted p)
+            rec.record("plan.start", Map.of("steps", String.valueOf(p.plan().size())));
+        else if (e instanceof AgentEvent.PlanStepStarted) rec.record("plan.step.start", Map.of());
+        else if (e instanceof AgentEvent.PlanStepEnded) rec.record("plan.step.end", Map.of());
     }
 }

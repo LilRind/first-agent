@@ -31,4 +31,13 @@ public sealed interface AgentEvent {
 
     /** 整个循环结束，附上完整历史。 */
     record AgentEnded(List<Message> messages) implements AgentEvent {}
+
+    /** Plan-and-Execute：规划完成，附完整计划。 */
+    record PlanStarted(String question, List<String> plan) implements AgentEvent {}
+
+    /** Plan-and-Execute：开始执行第 index 步（0-based）。 */
+    record PlanStepStarted(int index, String step) implements AgentEvent {}
+
+    /** Plan-and-Execute：第 index 步执行完成，附该步结果。 */
+    record PlanStepEnded(int index, String step, String result) implements AgentEvent {}
 }
