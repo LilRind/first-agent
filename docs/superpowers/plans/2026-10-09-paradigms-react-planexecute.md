@@ -5,11 +5,12 @@
 
 **运行前置（本机已就绪）：**
 ```bash
-export JAVA_HOME="$(cygpath -w /c/Users/13374/.jdks/ms-17.0.16)"
-export PATH="/c/Users/13374/.maven/expanded/apache-maven-3.9.16/bin:$PATH"
+# 本机路径示例（按实际安装位置替换）
+export JAVA_HOME="$(cygpath -w /path/to/jdk-17)"
+export PATH="/path/to/apache-maven-3.9.16/bin:$PATH"
 ```
 `JAVA_HOME` / `PATH` 不跨 shell 持久化，每个含 `mvn` 的命令都要先 export 上面两行。
-`mvn` 命令需在项目根 `C:\Users\13374\IdeaProjects\first-agent-minimal` 下执行。
+`mvn` 命令需在项目根目录下执行。
 
 **已存在（直接复用，不重复创建）：** `Message`/`ToolCall`/`AssistantReply`/`LlmProvider`/`AgentTool`/`ToolExecutionException`/`ToolRegistry`/`SalvageParser`/`AgentLoop`/`AgentEvent`/`LoopStrategy`/`TurnDecision`/`MockLlm`/`EchoTool`/`FailTool`/`AppConfig`/`OpenAILlmProvider`。
 
